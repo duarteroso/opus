@@ -24,7 +24,7 @@ pub fn (mut od OpusDecoder) open(path string) ! {
 	//
 	error := int(0)
 	od.file = C.op_open_file(&char(path.str), &error)
-	od.check_error(error) !
+	od.check_error(error)!
 	//
 	od.head = C.op_head(od.file, -1)
 }
@@ -57,7 +57,7 @@ pub fn (od OpusDecoder) sample_rate() i64 {
 }
 
 // bitrate returns the bitrate of the opusfile
-pub fn (od OpusDecoder) bitrate()! i64 {
+pub fn (od OpusDecoder) bitrate() !i64 {
 	rate := C.op_bitrate(od.file, -1)
 	od.check_error(rate)!
 	return i64(rate)
@@ -71,7 +71,7 @@ pub fn (od OpusDecoder) channels() int {
 // duration returns the total time in seconds of the opusfile
 pub fn (od OpusDecoder) duration() !f64 {
 	val := C.op_pcm_total(od.file, -1)
-	od.check_error(val) !
+	od.check_error(val)!
 	return val / od.sample_rate()
 }
 
@@ -86,7 +86,7 @@ pub fn (od OpusDecoder) seek(pos f64) ! {
 	//
 	offset := i64(n / od.sample_rate())
 	err := C.op_pcm_seek(od.file, offset)
-	od.check_error(err) !
+	od.check_error(err)!
 }
 
 // read reads a part of the opusfile up to the lenght of the provided buffer
@@ -104,7 +104,7 @@ pub fn (od OpusDecoder) read(mut buffer []i16) !i64 {
 		return 0
 	}
 	//
-	od.check_error(bytes_read) !
+	od.check_error(bytes_read)!
 	return bytes_read
 }
 
@@ -117,7 +117,7 @@ pub fn (od OpusDecoder) read_all(mut buffer []i16) ! {
 	mut tmp := []i16{len: chunk}
 	mut bytes_read := i64(0)
 	for {
-		bytes_read = od.read(mut tmp) !
+		bytes_read = od.read(mut tmp)!
 		if bytes_read == 0 {
 			break
 		}
@@ -134,56 +134,56 @@ pub fn (od OpusDecoder) read_all(mut buffer []i16) ! {
 // check_error checks for any opusfile error
 fn (od OpusDecoder) check_error<T>(code T) ! {
 	match i64(code) {
-		file.op_hole {
+		op_hole {
 			return error('There was a hole in the page sequence numbers (e.g., a page was corrupt or
     missing)')
 		}
-		file.op_eread {
+		op_eread {
 			return error('An underlying read, seek, or tell operation failed when it should have
     succeeded')
 		}
-		file.op_efault {
+		op_efault {
 			return error('A NULL pointer was passed where one was unexpected, or an
     internal memory allocation failed, or an internal library error was
     encountered')
 		}
-		file.op_eimpl {
+		op_eimpl {
 			return error('The stream used a feature that is not implemented, such as an unsupported
     channel family')
 		}
-		file.op_einval {
+		op_einval {
 			return error('One or more parameters to a function were invalid')
 		}
-		file.op_enotformat {
+		op_enotformat {
 			return error('A purported Ogg Opus stream did not begin with an Ogg page, a purported
     header packet did not start with one of the required strings, "OpusHead" or
     "OpusTags", or a link in a chained file was encountered that did not
     contain any logical Opus streams')
 		}
-		file.op_ebadheader {
+		op_ebadheader {
 			return error('A required header packet was not properly formatted, contained illegal
     values, or was missing altogether')
 		}
-		file.op_eversion {
+		op_eversion {
 			return error('The ID header contained an unrecognized version number')
 		}
-		file.op_enotaudio {
+		op_enotaudio {
 			return error('')
 		}
-		file.op_ebadpacket {
+		op_ebadpacket {
 			return error('An audio packet failed to decode properly.
    This is usually caused by a multistream Ogg packet where the durations of
     the individual Opus packets contained in it are not all the same')
 		}
-		file.op_ebadlink {
+		op_ebadlink {
 			return error('We failed to find data we had seen before, or the bitstream structure was
     sufficiently malformed that seeking to the target destination was
     impossible')
 		}
-		file.op_enoseek {
+		op_enoseek {
 			return error('An operation that requires seeking was requested on an unseekable stream')
 		}
-		file.op_ebadtimestamp {
+		op_ebadtimestamp {
 			return error('The first or last granule position of a link failed basic validity checks')
 		}
 		else {
