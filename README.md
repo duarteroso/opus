@@ -1,2 +1,2 @@
 # opusfile
-OpusFile V bindings
+Opus decoder V wrapper
