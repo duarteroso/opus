@@ -94,41 +94,39 @@ pub fn (od OpusDecoder) read(mut buffer []i16) !i64 {
 	//
 	assert buffer.len > 0 && buffer.len <= chunk
 	//
-	bytes_read := if od.is_stereo() {
-		C.op_read_stereo(od.file, buffer.data, buffer.len) * od.channels()
+	bytes_read := od.channels() * if od.is_stereo() {
+		C.op_read_stereo(od.file, buffer.data, buffer.len)
 	} else {
-		C.op_read(od.file, buffer.data, buffer.len, &od.link)
-	}
-	//
-	if bytes_read == 0 {
-		return 0
-	}
+		C.op_read(od.file, buffer.data, buffer.len, &od.link) 
+	} 
 	//
 	od.check_error(bytes_read)!
 	return bytes_read
 }
 
 // read_all reads the entire data of the opusfile
-pub fn (od OpusDecoder) read_all(mut buffer []i16) ! {
+pub fn (od OpusDecoder) read_all(mut buffer []i16) !i64 {
 	//
 	assert buffer.len == od.size()
 	//
 	mut index := i64(0)
 	mut tmp := []i16{len: chunk}
-	mut bytes_read := i64(0)
+	mut total_bytes_read := i64(0)
 	for {
-		bytes_read = od.read(mut tmp)!
+		bytes_read := od.read(mut tmp)!
 		if bytes_read == 0 {
 			break
 		}
 		//
-		real_read := bytes_read / 2
-		for i in 0 .. real_read {
+		total_bytes_read += bytes_read
+		for i in 0 .. bytes_read {
 			buffer[index + i] = tmp[i]
 		}
 		//
-		index += real_read
+		index += bytes_read
 	}
+	//
+	return total_bytes_read
 }
 
 // check_error checks for any opusfile error
