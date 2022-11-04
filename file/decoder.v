@@ -10,7 +10,7 @@ mut:
 }
 
 // create_decoder creates an instance of OpusDecoder
-fn create_decoder() &OpusDecoder {
+pub fn create_decoder() &OpusDecoder {
 	return &OpusDecoder{}
 }
 
@@ -91,14 +91,11 @@ pub fn (od OpusDecoder) seek(pos f64) ! {
 
 // read reads a part of the opusfile up to the lenght of the provided buffer
 pub fn (od OpusDecoder) read(mut buffer []i16) !i64 {
-	//
-	assert buffer.len > 0 && buffer.len <= chunk
-	//
 	bytes_read := od.channels() * if od.is_stereo() {
 		C.op_read_stereo(od.file, buffer.data, buffer.len)
 	} else {
-		C.op_read(od.file, buffer.data, buffer.len, &od.link) 
-	} 
+		C.op_read(od.file, buffer.data, buffer.len, &od.link)
+	}
 	//
 	od.check_error(bytes_read)!
 	return bytes_read
@@ -106,27 +103,26 @@ pub fn (od OpusDecoder) read(mut buffer []i16) !i64 {
 
 // read_all reads the entire data of the opusfile
 pub fn (od OpusDecoder) read_all(mut buffer []i16) !i64 {
-	//
-	assert buffer.len == od.size()
-	//
-	mut index := i64(0)
-	mut tmp := []i16{len: chunk}
+	channels := od.channels()
+	mut offset := i64(0)
 	mut total_bytes_read := i64(0)
 	for {
-		bytes_read := od.read(mut tmp)!
-		if bytes_read == 0 {
+		mut tmp := []i16{len: chunk}
+		samples := od.read(mut tmp)!
+		if samples == 0 {
 			break
 		}
 		//
-		total_bytes_read += bytes_read
-		for i in 0 .. bytes_read {
-			buffer[index + i] = tmp[i]
+		for i in 0 .. samples * channels {
+			buffer[(offset * channels) + i] = tmp[i]
 		}
-		//
-		index += bytes_read
+		offset += samples
+		total_bytes_read += samples * channels
 	}
 	//
-	return total_bytes_read
+	println(buffer.len)
+	println(total_bytes_read)
+	return total_bytes_read * od.channels()
 }
 
 // check_error checks for any opusfile error
