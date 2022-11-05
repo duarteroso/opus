@@ -1,4 +1,4 @@
-# opus
+# Opus
 Opus decoder V wrapper
 
 ## Install
