@@ -77,7 +77,7 @@ pub fn (od OpusDecoder) duration() !f64 {
 
 // size returns the total size of the opusfile
 pub fn (od OpusDecoder) size() i64 {
-	return C.op_pcm_total(od.file, -1) * od.channels() * 2
+	return C.op_pcm_total(od.file, -1) * od.channels()
 }
 
 // seek changes the internal position of the stream, in seconds
@@ -91,38 +91,35 @@ pub fn (od OpusDecoder) seek(pos f64) ! {
 
 // read reads a part of the opusfile up to the lenght of the provided buffer
 pub fn (od OpusDecoder) read(mut buffer []i16) !i64 {
-	bytes_read := od.channels() * if od.is_stereo() {
+	samples := od.channels() * if od.is_stereo() {
 		C.op_read_stereo(od.file, buffer.data, buffer.len)
 	} else {
 		C.op_read(od.file, buffer.data, buffer.len, &od.link)
 	}
 	//
-	od.check_error(bytes_read)!
-	return bytes_read
+	for i in 0 .. samples {
+		buffer[samples + i] = buffer[i]
+	}
+	od.check_error(samples)!
+	return samples * 2
 }
 
 // read_all reads the entire data of the opusfile
 pub fn (od OpusDecoder) read_all(mut buffer []i16) !i64 {
-	channels := od.channels()
 	mut offset := i64(0)
-	mut total_bytes_read := i64(0)
 	for {
 		mut tmp := []i16{len: chunk}
-		samples := od.read(mut tmp)!
+		samples := od.read(mut tmp)! / 2
 		if samples == 0 {
 			break
 		}
 		//
-		for i in 0 .. samples * channels {
-			buffer[(offset * channels) + i] = tmp[i]
+		for i in 0 .. samples {
+			buffer[offset + i] = tmp[i]
 		}
 		offset += samples
-		total_bytes_read += samples * channels
 	}
-	//
-	println(buffer.len)
-	println(total_bytes_read)
-	return total_bytes_read * od.channels()
+	return offset
 }
 
 // check_error checks for any opusfile error
