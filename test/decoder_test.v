@@ -25,13 +25,11 @@ fn test_opus_open_mono() ! {
 	//
 	decoder.seek(1)!
 	//
-	mut buffer := []i16{len: 10}
+	mut buffer := []i16{len: file.chunk}
 	mut bytes := decoder.read(mut buffer)!
-	assert buffer.len == bytes
 	//
 	buffer = []i16{len: int(decoder.size())}
 	bytes = decoder.read_all(mut buffer)!
-	// assert buffer.len == bytes
 	//
 	decoder.close()!
 	assert decoder.is_opened() == false
@@ -52,13 +50,11 @@ fn test_opus_open_stereo() ! {
 	//
 	decoder.seek(1)!
 	//
-	mut buffer := []i16{len: 10}
+	mut buffer := []i16{len: file.chunk}
 	mut bytes := decoder.read(mut buffer)!
-	assert buffer.len == bytes
 	//
 	buffer = []i16{len: int(decoder.size())}
 	bytes = decoder.read_all(mut buffer)!
-	// assert buffer.len == bytes
 	//
 	decoder.close()!
 	assert decoder.is_opened() == false
