@@ -1,7 +1,7 @@
 Module {
 	name: 'opus'
 	description: 'Opus decoder V wrapper'
-	version: '1.0.0'
+	version: '2022.11.05'
 	license: 'MIT'
 	dependencies: []
 }
