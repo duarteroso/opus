@@ -1,13 +1,13 @@
 module file
 
-[typedef]
+@[typedef]
 struct C.OpusHead {
 	version           int
 	channel_count     int
 	input_sample_rate u32
 }
 
-[typedef]
+@[typedef]
 struct C.OggOpusFile {
 }
 

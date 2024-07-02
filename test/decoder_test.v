@@ -2,13 +2,11 @@ module test
 
 import file
 
-const (
-	mono_channels   = 1
-	stereo_channels = 2
-	duration        = 7.0
-	sample_rate     = 48_000
-	file_size       = 348_481
-)
+const mono_channels = 1
+const stereo_channels = 2
+const duration = 7.0
+const sample_rate = 48_000
+const file_size = 348_481
 
 fn test_opus_open_mono() ! {
 	mut decoder := file.create_decoder()

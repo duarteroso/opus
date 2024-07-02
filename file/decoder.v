@@ -4,8 +4,8 @@ import math
 
 pub struct OpusDecoder {
 mut:
-	file &C.OggOpusFile = &C.OggOpusFile(0)
-	head &C.OpusHead    = &C.OpusHead(0)
+	file &C.OggOpusFile = &C.OggOpusFile(unsafe { nil })
+	head &C.OpusHead    = &C.OpusHead(unsafe { nil })
 	link int
 }
 
@@ -14,31 +14,28 @@ pub fn create_decoder() &OpusDecoder {
 	return &OpusDecoder{}
 }
 
-// open will open a opusfile
+// open will open an opusfile
 pub fn (mut od OpusDecoder) open(path string) ! {
-	//
 	if od.is_opened() {
-		println('OpusDecoder already opened')
-		return
+		return error('OpusDecoder already opened')
 	}
 	//
-	error := int(0)
-	od.file = C.op_open_file(&char(path.str), &error)
-	od.check_error(error)!
+	code := int(0)
+	od.file = C.op_open_file(&char(path.str), &code)
+	od.check_error(code)!
 	//
 	od.head = C.op_head(od.file, -1)
 }
 
 // close clears the opusfile. Must be called to clean up resources!
 pub fn (mut od OpusDecoder) close() ! {
-	//
 	if od.is_opened() == false {
-		return
+		return error('OpusDecoder is not opened')
 	}
 	//
 	C.op_free(od.file)
-	od.file = &C.OggOpusFile(0)
-	od.head = &C.OpusHead(0)
+	od.file = &C.OggOpusFile(unsafe { nil })
+	od.head = &C.OpusHead(unsafe { nil })
 }
 
 // is_opened returns true if the opusfile is open for reading
@@ -83,7 +80,6 @@ pub fn (od OpusDecoder) size() i64 {
 // seek changes the internal position of the stream, in seconds
 pub fn (od OpusDecoder) seek(pos f64) ! {
 	mut n := math.min(pos, od.duration()!)
-	//
 	offset := i64(n / od.sample_rate())
 	err := C.op_pcm_seek(od.file, offset)
 	od.check_error(err)!
@@ -123,7 +119,7 @@ pub fn (od OpusDecoder) read_all(mut buffer []i16) !i64 {
 }
 
 // check_error checks for any opusfile error
-fn (od OpusDecoder) check_error<T>(code T) ! {
+fn (od OpusDecoder) check_error[T](code T) ! {
 	match i64(code) {
 		op_hole {
 			return error('There was a hole in the page sequence numbers (e.g., a page was corrupt or
